@@ -8,17 +8,21 @@ function setup() {
 
 	const controls = document.getElementById("controls");
 	const add = createInputWithButton("ADD", (input) => {
-		tree.add(parseInt(input.value()));
+		console.log(tree.add(parseInt(input.value())));
+		redraw();
 	});
 	const remove = createInputWithButton("REMOVE", (input) => {
 		tree.remove(parseInt(input.value()));
+		redraw();
 	});
 	add.parent(controls);
 	remove.parent(controls);
+	noLoop();
 }
 
 function draw() {
 	background(0);
+	tree.draw(width / 2, tree._size);
 }
 
 /**

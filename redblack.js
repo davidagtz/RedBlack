@@ -8,13 +8,42 @@ const Tree = {
 	},
 	BLACK: 0,
 	RED: 1,
+	_size: 50,
+	leftHeight: (node) => {
+		if (!node) return 0;
+		if (node.left) {
+			return 1 + Tree.leftHeight(node.left);
+		}
+		return 1;
+	},
+	rightHeight: (node) => {
+		if (!node) return 0;
+		if (node.right) {
+			return 1 + Tree.rightHeight(node.right);
+		}
+		return 1;
+	},
+	leftWidth: (node) => {
+		let cursor = node.left;
+		let sum = 0;
+		while (cursor) {
+			sum += 1 + Tree.leftWidth(cursor);
+			cursor = cursor.right;
+		}
+		return sum;
+	},
+	rightWidth: (node) => {
+		let cursor = node.right;
+		let sum = 0;
+		while (cursor) {
+			sum += 1 + Tree.rightWidth(cursor);
+			cursor = cursor.left;
+		}
+		return sum;
+	},
 };
 
 Tree.RedBlack = class {
-	constructor() {
-		this._size = 50;
-	}
-
 	add(int) {
 		if (!this.root) {
 			this.root = new Tree.Node(int);
@@ -68,19 +97,21 @@ Tree.RedBlack = class {
 			fill(255, 0, 0);
 			stroke(100, 0, 0);
 		}
-		ellipse(x, y, this._size);
+		ellipse(x, y, Tree._size);
 
 		fill(255);
 		noStroke();
 		textAlign(CENTER);
-		textSize(this._size / 2);
-		text(node.value, x, y + this._size / 8);
+		textSize(Tree._size / 2);
+		text(node.value, x, y + Tree._size / 8);
 
 		if (node.left) {
-			this.draw(x - this._size, y + this._size, node.left);
+			const xoff = Tree.leftWidth(node) * Tree._size;
+			this.draw(x - xoff, y + Tree._size, node.left);
 		}
 		if (node.right) {
-			this.draw(x + this._size, y + this._size, node.right);
+			const xoff = Tree.rightWidth(node) * Tree._size;
+			this.draw(x + xoff, y + Tree._size, node.right);
 		}
 	}
 };

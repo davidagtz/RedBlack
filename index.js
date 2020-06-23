@@ -8,7 +8,7 @@ function setup() {
 
 	const controls = document.getElementById("controls");
 	const add = createInputWithButton("ADD", (input) => {
-		console.log(tree.add(parseInt(input.value())));
+		tree.add(parseInt(input.value()));
 		redraw();
 	});
 	const remove = createInputWithButton("REMOVE", (input) => {
@@ -22,7 +22,7 @@ function setup() {
 
 function draw() {
 	background(0);
-	tree.draw(width / 2, tree._size);
+	tree.draw(width / 2, Tree._size);
 }
 
 /**
@@ -37,11 +37,17 @@ function createInputWithButton(str, onPress) {
 	input.parent(cont);
 
 	const button = createButton(str);
-	button.mousePressed(() => {
+	button.elt.onmousedown = () => {
 		onPress(input);
 		input.value("");
-	});
+	};
 	button.parent(cont);
+
+	input.elt.onkeydown = (e) => {
+		if (e.key === "Enter") {
+			button.elt.onmousedown();
+		}
+	};
 
 	return cont;
 }

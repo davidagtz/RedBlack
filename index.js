@@ -8,11 +8,15 @@ function setup() {
 
 	const controls = document.getElementById("controls");
 	const add = createInputWithButton("ADD", (input) => {
-		tree.add(parseInt(input.value()));
+		const num = parseInt(input.value());
+		if (isNaN(num)) return;
+		tree.add(num);
 		redraw();
 	});
 	const remove = createInputWithButton("REMOVE", (input) => {
-		tree.remove(parseInt(input.value()));
+		const num = parseInt(input.value());
+		if (isNaN(num)) return;
+		tree.remove(num);
 		redraw();
 	});
 	add.parent(controls);

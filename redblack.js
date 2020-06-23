@@ -5,6 +5,32 @@ const Tree = {
 			this.left = left;
 			this.right = right;
 		}
+
+		remove(int) {
+			if (int < this.value) {
+				this.left = this.left.remove(int);
+			} else if (int > this.value) {
+				this.right = this.right.remove(int);
+			} else {
+				if (!this.left) {
+					return this.right;
+				}
+				if (!this.right) {
+					return this.left;
+				}
+
+				this.value = Tree.minValue(this.right).value;
+
+				this.right = this.right.remove(this.value);
+			}
+			return this;
+		}
+
+		equals(node) {
+			this.value = node.value;
+			this.left = node.left;
+			this.right = node.right;
+		}
 	},
 	BLACK: 0,
 	RED: 1,
@@ -25,6 +51,13 @@ const Tree = {
 		if (!node.right) return 0;
 		if (!node.right.left) return 1;
 		return Tree.width(node.right.left) + 1;
+	},
+	minValue: (node) => {
+		let cursor = node;
+		while (cursor.left) {
+			cursor = cursor.left;
+		}
+		return cursor;
 	},
 };
 
@@ -67,6 +100,7 @@ Tree.RedBlack = class {
 		if (!this.root) {
 			return false;
 		}
+		this.root = this.root.remove(int);
 	}
 
 	draw(x, y, node = this.root) {

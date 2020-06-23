@@ -9,37 +9,22 @@ const Tree = {
 	BLACK: 0,
 	RED: 1,
 	_size: 50,
-	leftHeight: (node) => {
+	width: (node) => {
 		if (!node) return 0;
-		if (node.left) {
-			return 1 + Tree.leftHeight(node.left);
-		}
-		return 1;
-	},
-	rightHeight: (node) => {
-		if (!node) return 0;
-		if (node.right) {
-			return 1 + Tree.rightHeight(node.right);
-		}
-		return 1;
+		let width = 1;
+		if (node.left) width += Tree.width(node.left);
+		if (node.right) width += Tree.width(node.right);
+		return width;
 	},
 	leftWidth: (node) => {
-		let cursor = node.left;
-		let sum = 0;
-		while (cursor) {
-			sum += 1 + Tree.leftWidth(cursor);
-			cursor = cursor.right;
-		}
-		return sum;
+		if (!node.left) return 0;
+		if (!node.left.right) return 1;
+		return Tree.width(node.left.right) + 1;
 	},
 	rightWidth: (node) => {
-		let cursor = node.right;
-		let sum = 0;
-		while (cursor) {
-			sum += 1 + Tree.rightWidth(cursor);
-			cursor = cursor.left;
-		}
-		return sum;
+		if (!node.right) return 0;
+		if (!node.right.left) return 1;
+		return Tree.width(node.right.left) + 1;
 	},
 };
 

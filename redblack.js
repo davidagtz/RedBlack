@@ -74,6 +74,19 @@ Tree.RedBlack = class {
 			return;
 		}
 
+		if (node.left) {
+			const xoff = Tree.leftWidth(node) * Tree._size;
+			stroke(255);
+			line(x, y, x - xoff, y + Tree._size);
+			this.draw(x - xoff, y + Tree._size, node.left);
+		}
+		if (node.right) {
+			const xoff = Tree.rightWidth(node) * Tree._size;
+			stroke(255);
+			line(x, y, x + xoff, y + Tree._size);
+			this.draw(x + xoff, y + Tree._size, node.right);
+		}
+
 		strokeWeight(2);
 		if (node.color === Tree.BLACK) {
 			stroke(127);
@@ -89,14 +102,5 @@ Tree.RedBlack = class {
 		textAlign(CENTER);
 		textSize(Tree._size / 2);
 		text(node.value, x, y + Tree._size / 8);
-
-		if (node.left) {
-			const xoff = Tree.leftWidth(node) * Tree._size;
-			this.draw(x - xoff, y + Tree._size, node.left);
-		}
-		if (node.right) {
-			const xoff = Tree.rightWidth(node) * Tree._size;
-			this.draw(x + xoff, y + Tree._size, node.right);
-		}
 	}
 };

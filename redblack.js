@@ -7,9 +7,9 @@ const Tree = {
 		}
 
 		remove(int) {
-			if (int < this.value) {
+			if (int < this.value && this.left) {
 				this.left = this.left.remove(int);
-			} else if (int > this.value) {
+			} else if (int > this.value && this.right) {
 				this.right = this.right.remove(int);
 			} else {
 				if (!this.left) {
@@ -24,6 +24,28 @@ const Tree = {
 				this.right = this.right.remove(this.value);
 			}
 			return this;
+		}
+
+		add(int) {
+			if (this.value === int) {
+				return null;
+			}
+
+			if (this.value < int) {
+				if (this.right) {
+					return this.right.add(int);
+				} else {
+					this.right = new Tree.Node(int);
+					return this.right;
+				}
+			} else {
+				if (this.left) {
+					return this.left.add(int);
+				} else {
+					this.left = new Tree.Node(int);
+					return this.left;
+				}
+			}
 		}
 
 		equals(node) {
@@ -69,30 +91,9 @@ Tree.RedBlack = class {
 			return true;
 		}
 
-		let cursor = this.root;
-		while (cursor) {
-			if (cursor.value === int) {
-				return false;
-			}
-
-			if (cursor.value < int) {
-				if (cursor.right) {
-					cursor = cursor.right;
-				} else {
-					cursor.right = new Tree.Node(int);
-					cursor.right.color = Tree.RED;
-					break;
-				}
-			} else {
-				if (cursor.left) {
-					cursor = cursor.left;
-				} else {
-					cursor.left = new Tree.Node(int);
-					cursor.left.color = Tree.RED;
-					break;
-				}
-			}
-		}
+		let inserted = this.root.add(int);
+		if (!inserted) return false;
+		inserted.color = Tree.RED;
 
 		return true;
 	}

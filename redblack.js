@@ -60,12 +60,8 @@ const Tree = {
 		}
 
 		sibling() {
-			if (!this.parent.left) return this.left;
-
-			if (this.parent.left.value === this.value) {
-				return this.right;
-			}
-			return this.left;
+			if (this.isLeft()) return this.parent.right;
+			return this.parent.left;
 		}
 
 		grandparent() {
@@ -92,6 +88,32 @@ const Tree = {
 		setRight(node) {
 			this.right = node;
 			if (node) node.parent = this;
+		}
+
+		set(node) {
+			const parent = node.parent;
+			const value = node.value;
+			const left = node.left;
+			const right = node.right;
+
+			// node.parent = this.parent;
+			// node.left = this.left;
+			// node.right = this.right;
+			// node.value = this.value;
+
+			this.parent = parent;
+			this.value = value;
+			this.left = left;
+			this.right = right;
+		}
+
+		copy() {
+			return new Tree.Node(
+				this.value,
+				this.left,
+				this.right,
+				this.parent
+			);
 		}
 	},
 	BLACK: 0,
@@ -150,66 +172,102 @@ Tree.RedBlack = class {
 	repair(node) {
 		if (!node.parent) {
 			node.color = Tree.BLACK;
+			this.root = node;
 		} else if (node.parent.color === Tree.RED) {
 			if (!node.uncle() || node.uncle().color === Tree.BLACK) {
+				// Triangle case
 				if (node.isLeft() && node.parent.isRight()) {
 					this.rightRotate(node.parent);
+					node.set(node.right);
 				} else if (node.isRight() && node.parent.isLeft()) {
 					this.leftRotate(node.parent);
+					node.set(node.left);
 				}
 
+				// Straight line case
 				if (node.isLeft()) {
-					this.rightRotate(node.parent);
+					this.rightRotate(node.grandparent());
 				} else {
-					this.leftRotate(node.parent);
+					this.leftRotate(node.grandparent());
 				}
 
 				node.parent.color = Tree.BLACK;
+				console.log(node);
 				node.sibling().color = Tree.RED;
 			} else {
 				node.parent.color = Tree.BLACK;
 				node.uncle().color = Tree.BLACK;
 				node.grandparent().color = Tree.RED;
 				this.repair(node.grandparent());
-				return;
 			}
 		}
+		// return node;
 	}
 
-	rightRotate(node) {
-		const p = node.parent;
-		const n = node.left;
+	rightRotate(root) {
+		const newRoot = root.left;
+		const oldRoot = root.copy();
 
-		node.setLeft(n.right);
-		n.setRight(node);
-		node.parent = n;
+		// Transfer of rootship
+		newRoot.parent = oldRoot.parent;
+		oldRoot.parent = newRoot;
 
-		if (p) {
-			if (node.is(p.left)) {
-				p.setLeft(n);
-			} else if (node.is(p.right)) {
-				p.setRight(n);
-			}
-		}
-		n.parent = p;
+		// Deal with hanging tree
+		oldRoot.setLeft(newRoot.right);
+
+		// childize old root
+		newRoot.setRight(oldRoot);
+
+		root.set(newRoot);
+
+		// const pivot = newRoot.parent;
+		// const hang = newRoot.left;
+
+		// newRoot.swapLeft(hang.right);
+		// hang.setRight(newRoot);
+		// newRoot.parent = hang;
+
+		// if (pivot) {
+		// 	if (newRoot.is(pivot.left)) {
+		// 		pivot.setLeft(hang);
+		// 	} else if (newRoot.is(pivot.right)) {
+		// 		pivot.setRight(hang);
+		// 	}
+		// }
+		// hang.parent = pivot;
 	}
 
-	leftRotate(node) {
-		const p = node.parent;
-		const n = node.right;
+	leftRotate(root) {
+		const newRoot = root.right;
+		const oldRoot = root.copy();
 
-		node.setRight(n.left);
-		n.setLeft(node);
-		node.parent = n;
+		// Transfer of rootship
+		newRoot.parent = oldRoot.parent;
+		oldRoot.parent = newRoot;
 
-		if (p) {
-			if (node.is(p.left)) {
-				p.setLeft(n);
-			} else if (node.is(p.right)) {
-				p.setRight(n);
-			}
-		}
-		n.parent = p;
+		// Deal with hanging tree
+		oldRoot.setRight(newRoot.left);
+
+		// childize old root
+		newRoot.setLeft(oldRoot);
+
+		root.set(newRoot);
+		// newRoot.set(oldRoot);
+		// const p = node.parent;
+		// const n = node.right;
+
+		// node.setRight(n.left);
+		// n.setLeft(node);
+		// node.parent = n;
+
+		// if (p) {
+		// 	if (node.is(p.left)) {
+		// 		p.setLeft(n);
+		// 	} else if (node.is(p.right)) {
+		// 		p.setRight(n);
+		// 	}
+		// }
+		// n.parent = p;
 	}
 
 	draw(x, y, node = this.root) {

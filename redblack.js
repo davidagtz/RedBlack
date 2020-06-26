@@ -1,16 +1,17 @@
 const Tree = {
 	Node: class Node {
-		constructor(int, left, right) {
+		constructor(int, left, right, parent) {
 			this.value = int;
 			this.left = left;
 			this.right = right;
+			this.parent = parent;
 		}
 
 		remove(int) {
 			if (int < this.value && this.left) {
-				this.left = this.left.remove(int);
+				this.setLeft(this.left.remove(int));
 			} else if (int > this.value && this.right) {
-				this.right = this.right.remove(int);
+				this.setRight(this.right.remove(int));
 			} else {
 				if (!this.left) {
 					return this.right;
@@ -21,7 +22,7 @@ const Tree = {
 
 				this.value = Tree.minValue(this.right).value;
 
-				this.right = this.right.remove(this.value);
+				this.setRight(this.right.remove(this.value));
 			}
 			return this;
 		}
@@ -35,14 +36,14 @@ const Tree = {
 				if (this.right) {
 					return this.right.add(int);
 				} else {
-					this.right = new Tree.Node(int);
+					this.setRight(new Tree.Node(int));
 					return this.right;
 				}
 			} else {
 				if (this.left) {
 					return this.left.add(int);
 				} else {
-					this.left = new Tree.Node(int);
+					this.setLeft(new Tree.Node(int));
 					return this.left;
 				}
 			}
@@ -52,6 +53,45 @@ const Tree = {
 			this.value = node.value;
 			this.left = node.left;
 			this.right = node.right;
+		}
+
+		uncle() {
+			return this.parent.sibling();
+		}
+
+		sibling() {
+			if (!this.parent.left) return this.left;
+
+			if (this.parent.left.value === this.value) {
+				return this.right;
+			}
+			return this.left;
+		}
+
+		grandparent() {
+			return this.parent.parent;
+		}
+
+		is(node) {
+			return node && node.value === this.value;
+		}
+
+		isLeft() {
+			return this.is(this.parent.left);
+		}
+
+		isRight() {
+			return this.is(this.parent.right);
+		}
+
+		setLeft(node) {
+			this.left = node;
+			if (node) node.parent = this;
+		}
+
+		setRight(node) {
+			this.right = node;
+			if (node) node.parent = this;
 		}
 	},
 	BLACK: 0,
@@ -95,13 +135,81 @@ Tree.RedBlack = class {
 		if (!inserted) return false;
 		inserted.color = Tree.RED;
 
+		this.repair(inserted);
+
 		return true;
 	}
+
 	remove(int) {
 		if (!this.root) {
 			return false;
 		}
 		this.root = this.root.remove(int);
+	}
+
+	repair(node) {
+		if (!node.parent) {
+			node.color = Tree.BLACK;
+		} else if (node.parent.color === Tree.RED) {
+			if (!node.uncle() || node.uncle().color === Tree.BLACK) {
+				if (node.isLeft() && node.parent.isRight()) {
+					this.rightRotate(node.parent);
+				} else if (node.isRight() && node.parent.isLeft()) {
+					this.leftRotate(node.parent);
+				}
+
+				if (node.isLeft()) {
+					this.rightRotate(node.parent);
+				} else {
+					this.leftRotate(node.parent);
+				}
+
+				node.parent.color = Tree.BLACK;
+				node.sibling().color = Tree.RED;
+			} else {
+				node.parent.color = Tree.BLACK;
+				node.uncle().color = Tree.BLACK;
+				node.grandparent().color = Tree.RED;
+				this.repair(node.grandparent());
+				return;
+			}
+		}
+	}
+
+	rightRotate(node) {
+		const p = node.parent;
+		const n = node.left;
+
+		node.setLeft(n.right);
+		n.setRight(node);
+		node.parent = n;
+
+		if (p) {
+			if (node.is(p.left)) {
+				p.setLeft(n);
+			} else if (node.is(p.right)) {
+				p.setRight(n);
+			}
+		}
+		n.parent = p;
+	}
+
+	leftRotate(node) {
+		const p = node.parent;
+		const n = node.right;
+
+		node.setRight(n.left);
+		n.setLeft(node);
+		node.parent = n;
+
+		if (p) {
+			if (node.is(p.left)) {
+				p.setLeft(n);
+			} else if (node.is(p.right)) {
+				p.setRight(n);
+			}
+		}
+		n.parent = p;
 	}
 
 	draw(x, y, node = this.root) {

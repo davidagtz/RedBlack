@@ -96,15 +96,10 @@ const Tree = {
 			const left = node.left;
 			const right = node.right;
 
-			// node.parent = this.parent;
-			// node.left = this.left;
-			// node.right = this.right;
-			// node.value = this.value;
-
 			this.parent = parent;
 			this.value = value;
-			this.left = left;
-			this.right = right;
+			this.setLeft(left);
+			this.setRight(right);
 		}
 
 		copy() {
@@ -114,6 +109,16 @@ const Tree = {
 				this.right,
 				this.parent
 			);
+		}
+
+		find(int) {
+			if (this.value === int) {
+				return this;
+			}
+			if (int < this.value) {
+				return this.left ? this.left.find(int) : null;
+			}
+			return this.right ? this.right.find(int) : null;
 		}
 	},
 	BLACK: 0,
@@ -166,6 +171,8 @@ Tree.RedBlack = class {
 		if (!this.root) {
 			return false;
 		}
+
+		let cursor = this.root.find(int);
 		this.root = this.root.remove(int);
 	}
 
@@ -174,14 +181,22 @@ Tree.RedBlack = class {
 			node.color = Tree.BLACK;
 			this.root = node;
 		} else if (node.parent.color === Tree.RED) {
-			if (!node.uncle() || node.uncle().color === Tree.BLACK) {
+			if (node.uncle() && node.uncle().color === Tree.RED) {
+				node.parent.color = Tree.BLACK;
+				node.uncle().color = Tree.BLACK;
+				node.grandparent().color = Tree.RED;
+				this.repair(node.grandparent());
+			} else {
+				const p = node.parent;
 				// Triangle case
 				if (node.isLeft() && node.parent.isRight()) {
 					this.rightRotate(node.parent);
 					node.set(node.right);
+					p.setRight(node);
 				} else if (node.isRight() && node.parent.isLeft()) {
 					this.leftRotate(node.parent);
 					node.set(node.left);
+					p.setLeft(node);
 				}
 
 				// Straight line case
@@ -192,16 +207,9 @@ Tree.RedBlack = class {
 				}
 
 				node.parent.color = Tree.BLACK;
-				console.log(node);
 				node.sibling().color = Tree.RED;
-			} else {
-				node.parent.color = Tree.BLACK;
-				node.uncle().color = Tree.BLACK;
-				node.grandparent().color = Tree.RED;
-				this.repair(node.grandparent());
 			}
 		}
-		// return node;
 	}
 
 	rightRotate(root) {
@@ -210,7 +218,6 @@ Tree.RedBlack = class {
 
 		// Transfer of rootship
 		newRoot.parent = oldRoot.parent;
-		oldRoot.parent = newRoot;
 
 		// Deal with hanging tree
 		oldRoot.setLeft(newRoot.right);
@@ -219,22 +226,6 @@ Tree.RedBlack = class {
 		newRoot.setRight(oldRoot);
 
 		root.set(newRoot);
-
-		// const pivot = newRoot.parent;
-		// const hang = newRoot.left;
-
-		// newRoot.swapLeft(hang.right);
-		// hang.setRight(newRoot);
-		// newRoot.parent = hang;
-
-		// if (pivot) {
-		// 	if (newRoot.is(pivot.left)) {
-		// 		pivot.setLeft(hang);
-		// 	} else if (newRoot.is(pivot.right)) {
-		// 		pivot.setRight(hang);
-		// 	}
-		// }
-		// hang.parent = pivot;
 	}
 
 	leftRotate(root) {
@@ -243,7 +234,6 @@ Tree.RedBlack = class {
 
 		// Transfer of rootship
 		newRoot.parent = oldRoot.parent;
-		oldRoot.parent = newRoot;
 
 		// Deal with hanging tree
 		oldRoot.setRight(newRoot.left);
@@ -252,22 +242,6 @@ Tree.RedBlack = class {
 		newRoot.setLeft(oldRoot);
 
 		root.set(newRoot);
-		// newRoot.set(oldRoot);
-		// const p = node.parent;
-		// const n = node.right;
-
-		// node.setRight(n.left);
-		// n.setLeft(node);
-		// node.parent = n;
-
-		// if (p) {
-		// 	if (node.is(p.left)) {
-		// 		p.setLeft(n);
-		// 	} else if (node.is(p.right)) {
-		// 		p.setRight(n);
-		// 	}
-		// }
-		// n.parent = p;
 	}
 
 	draw(x, y, node = this.root) {

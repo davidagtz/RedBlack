@@ -80,6 +80,18 @@ const Tree = {
 			return this.is(this.parent.right);
 		}
 
+		isRoot() {
+			return this.parent == null;
+		}
+
+		isRed() {
+			return this.color === Tree.RED;
+		}
+
+		isBlack() {
+			return this.color === Tree.BLACK;
+		}
+
 		setLeft(node) {
 			this.left = node;
 			if (node) node.parent = this;
@@ -100,6 +112,14 @@ const Tree = {
 			this.value = value;
 			this.setLeft(left);
 			this.setRight(right);
+		}
+
+		toRed() {
+			this.color = Tree.RED;
+		}
+
+		toBlack() {
+			this.color = Tree.BLACK;
 		}
 
 		copy() {
@@ -154,37 +174,182 @@ Tree.RedBlack = class {
 	add(int) {
 		if (!this.root) {
 			this.root = new Tree.Node(int);
-			this.root.color = Tree.BLACK;
+			this.root.toBlack();
 			return true;
 		}
 
 		let inserted = this.root.add(int);
 		if (!inserted) return false;
-		inserted.color = Tree.RED;
+		inserted.toRed();
 
 		this.repair(inserted);
 
 		return true;
 	}
 
-	remove(int) {
-		if (!this.root) {
-			return false;
+	// remove(int) {
+	// 	if (!this.root) {
+	// 		return false;
+	// 	}
+
+	// 	// let cursor = this.root.find(int);
+	// 	// if()
+
+	// 	this.root = this.root.remove(int);
+	// }
+
+	remove(int, node = this.root) {
+		if (int < node.value && node.left) {
+			node.setLeft(node.left.remove(int));
+		} else if (int > node.value && node.right) {
+			node.setRight(node.right.remove(int));
+		} else {
+			if (!node.right || !node.left) {
+				return this._remove(node);
+			}
+
+			node.value = Tree.minValue(node.right).value;
+
+			node.setRight(node.right.remove(node.value));
+		}
+		return node;
+	}
+
+	_remove(node) {
+		const u = this.left ? this.left : this.right;
+		const doubleBlack = (!u || u.isBlack()) && node.isBlack();
+
+		if (node.isRoot()) {
+			this.root = u;
+			if (this.root) {
+				this.root.parent = null;
+				this.root.toBlack();
+			}
+			return null;
 		}
 
-		let cursor = this.root.find(int);
-		this.root = this.root.remove(int);
+		if (!u) {
+			if (doubleBlack) {
+				this.fixDoubleBlack(node);
+			}
+			return null;
+		}
+
+		if (node.isLeft()) {
+			node.parent.setLeft(u);
+		} else {
+			node.parent.setRight(u);
+		}
+
+		if (doubleBlack) {
+			this.fixDoubleBlack();
+		} else {
+			u.toBlack();
+		}
+
+		return u;
 	}
+
+	fixDoubleBlack(node) {
+		if (node.isRoot()) return;
+		const sib = node.sibling();
+		const par = node.parent;
+
+		if (!sib) {
+			this.fixDoubleBlack(par);
+			return;
+		}
+
+		if (sib.isRed()) {
+			par.toRed();
+			sib.toBlack();
+
+			if (sib.isLeft()) {
+				this.rightRotate(par);
+			} else {
+				this.leftRotate(par);
+			}
+
+			this.fixDoubleBlack(node);
+		} else {
+			if (sib.hasRed()) {
+				if (sib.left && sib.left.isRed()) {
+					if (sib.isLeft()) {
+						sib.left.toRed();
+						sib.color = par.color;
+						this.rightRotate(par);
+					} else {
+						sib.left.color = par.color;
+						this.rightRotate(sib);
+						this.leftRotate(par);
+					}
+				} else {
+					if (sib.isLeft()) {
+						sib.right = par.color;
+						this.leftRotate(sib);
+						this.rightRotate(par);
+					} else {
+						sib.right.toRed();
+						sib.color = par.color;
+						this.leftRotate(par);
+					}
+				}
+				par.toBlack();
+			} else {
+				sib.toRed();
+				if (par.isBlack()) {
+					this.fixDoubleBlack(par);
+				} else {
+					par.toBlack();
+				}
+			}
+		}
+	}
+	// _remove(int, node = this.root) {
+	// 	if (int < node.value && node.left) {
+	// 		node.setLeft(node.left.remove(int));
+	// 	} else if (int > node.value && node.right) {
+	// 		node.setRight(node.right.remove(int));
+	// 	} else {
+	// 		if (!node.left) {
+	// 			if (
+	// 				node.isRed() ||
+	// 				(node.right && node.right.isRed())
+	// 			) {
+	// 				if (node.right) node.right.toBlack();
+	// 				return node.right;
+	// 			}
+	// 			this.fixDoubleBlack(node.right);
+	// 			return node.right;
+	// 		}
+	// 		if (!node.right) {
+	// 			if (
+	// 				node.isRed() ||
+	// 				(node.left && node.left.isRed())
+	// 			) {
+	// 				if (node.left) node.left.toBlack();
+	// 				return node.left;
+	// 			}
+	// 			this.fixDoubleBlack(node.left);
+	// 			return node.left;
+	// 		}
+
+	// 		node.value = Tree.minValue(node.right).value;
+
+	// 		node.setRight(node.right.remove(node.value));
+	// 	}
+	// 	return node;
+	// }
 
 	repair(node) {
 		if (!node.parent) {
-			node.color = Tree.BLACK;
+			node.toBlack();
 			this.root = node;
-		} else if (node.parent.color === Tree.RED) {
-			if (node.uncle() && node.uncle().color === Tree.RED) {
-				node.parent.color = Tree.BLACK;
-				node.uncle().color = Tree.BLACK;
-				node.grandparent().color = Tree.RED;
+		} else if (node.parent.isRed()) {
+			if (node.uncle() && node.uncle().isRed()) {
+				node.parent.toBlack();
+				node.uncle().toBlack();
+				node.grandparent().toRed();
 				this.repair(node.grandparent());
 			} else {
 				const p = node.parent;
@@ -206,8 +371,8 @@ Tree.RedBlack = class {
 					this.leftRotate(node.grandparent());
 				}
 
-				node.parent.color = Tree.BLACK;
-				node.sibling().color = Tree.RED;
+				node.parent.toBlack();
+				node.sibling().toRed();
 			}
 		}
 	}

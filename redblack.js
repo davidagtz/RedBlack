@@ -68,6 +68,13 @@ const Tree = {
 			return this.parent.parent;
 		}
 
+		hasRed() {
+			return (
+				(this.left && this.left.isRed()) ||
+				(this.right && this.right.isRed())
+			);
+		}
+
 		is(node) {
 			return node && node.value === this.value;
 		}
@@ -187,22 +194,11 @@ Tree.RedBlack = class {
 		return true;
 	}
 
-	// remove(int) {
-	// 	if (!this.root) {
-	// 		return false;
-	// 	}
-
-	// 	// let cursor = this.root.find(int);
-	// 	// if()
-
-	// 	this.root = this.root.remove(int);
-	// }
-
 	remove(int, node = this.root) {
 		if (int < node.value && node.left) {
-			node.setLeft(node.left.remove(int));
+			node.setLeft(this.remove(int, node.left));
 		} else if (int > node.value && node.right) {
-			node.setRight(node.right.remove(int));
+			node.setRight(this.remove(int, node.right));
 		} else {
 			if (!node.right || !node.left) {
 				return this._remove(node);
@@ -210,13 +206,13 @@ Tree.RedBlack = class {
 
 			node.value = Tree.minValue(node.right).value;
 
-			node.setRight(node.right.remove(node.value));
+			node.setRight(this.remove(node.value, node.right));
 		}
 		return node;
 	}
 
 	_remove(node) {
-		const u = this.left ? this.left : this.right;
+		const u = node.left ? node.left : node.right;
 		const doubleBlack = (!u || u.isBlack()) && node.isBlack();
 
 		if (node.isRoot()) {
@@ -305,41 +301,6 @@ Tree.RedBlack = class {
 			}
 		}
 	}
-	// _remove(int, node = this.root) {
-	// 	if (int < node.value && node.left) {
-	// 		node.setLeft(node.left.remove(int));
-	// 	} else if (int > node.value && node.right) {
-	// 		node.setRight(node.right.remove(int));
-	// 	} else {
-	// 		if (!node.left) {
-	// 			if (
-	// 				node.isRed() ||
-	// 				(node.right && node.right.isRed())
-	// 			) {
-	// 				if (node.right) node.right.toBlack();
-	// 				return node.right;
-	// 			}
-	// 			this.fixDoubleBlack(node.right);
-	// 			return node.right;
-	// 		}
-	// 		if (!node.right) {
-	// 			if (
-	// 				node.isRed() ||
-	// 				(node.left && node.left.isRed())
-	// 			) {
-	// 				if (node.left) node.left.toBlack();
-	// 				return node.left;
-	// 			}
-	// 			this.fixDoubleBlack(node.left);
-	// 			return node.left;
-	// 		}
-
-	// 		node.value = Tree.minValue(node.right).value;
-
-	// 		node.setRight(node.right.remove(node.value));
-	// 	}
-	// 	return node;
-	// }
 
 	repair(node) {
 		if (!node.parent) {
